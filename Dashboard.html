@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Tracker Dashboard</title>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    
+    <style>
+        /* CSS Variables for Theme System */
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #45a049;
+            --secondary: #2196F3;
+            --secondary-light: #64B5F6;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --bg-tertiary: #e8e8e8;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --card-bg: #ffffff;
+            --accent-steps: #FF9800;
+            --accent-calories: #F44336;
+            --accent-heart: #E91E63;
+            --accent-distance: #00BCD4;
+            --accent-duration: #9C27B0;
+        }
+
+        body[data-theme="dark"] {
+            --bg-primary: #121212;
+            --bg-secondary: #1E1E1E;
+            --bg-tertiary: #2C2C2C;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --border: #424242;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --card-bg: #1E1E1E;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            line-height: 1.6;
+        }
+
+        /* Header Styling */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .toggle-btn, .menu-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toggle-btn:hover, .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .menu-toggle {
+            display: none;
+        }
+
+        /* Container Layout */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 60px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem 0;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px var(--shadow);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav li {
+            margin: 0;
+        }
+
+        .sidebar nav a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+        }
+
+        .sidebar nav a:hover {
+            background-color: var(--bg-secondary);
+            border-left-color: var(--primary);
+            padding-left: 1.75rem;
+        }
+
+        .sidebar nav a.active {
+            background-color: var(--bg-secondary);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .sidebar-section {
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-section-title {
+            padding: 1rem 1.5rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--text-primary);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Metric Card */
+        .metric-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px var(--shadow);
+            transition: all 0.3s ease;
+            border-left: 5px solid;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+
+        .metric-card.steps { border-left-color: var(--accent-steps); }
+        .metric-card.calories { border-left-color: var(--accent-calories); }
+        .metric-card.heart-rate { border-left-color: var(--accent-heart); }
+        .metric-card.distance { border-left-color: var(--accent-distance); }
+        .metric-card.duration { border-left-color: var(--accent-duration); }
+
+        .metric-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .metric-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-icon {
+            font-size: 1.5rem;
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-unit {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .metric-goal {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Charts Section */
+        .charts-section {
+            margin-bottom: 3rem;
+        }
+
+        .charts-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+        }
+
+        .chart-container {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px var(--shadow);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        /* Data Input Section */
+        .input-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 2px 12px var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .input-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--secondary-light);
+        }
+
+        .btn-danger {
+            background-color: #F44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 0;
+                overflow: hidden;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                transition: max-height 0.3s ease;
+            }
+
+            .sidebar.active {
+                max-height: 500px;
+                overflow-y: auto;
+            }
+
+            .menu-toggle {
+                display: flex;
+            }
+
+            .main-content {
+                padding: 1.5rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-wrapper {
+                height: 250px;
+            }
+
+            header h1 {
+                font-size: 1.3rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 1rem 0.75rem;
+            }
+
+            header h1 {
+                font-size: 1.1rem;
+            }
+
+            .toggle-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .metric-card {
+                padding: 1rem;
+            }
+
+            .metric-value {
+                font-size: 2rem;
+            }
+
+            .page-title {
+                font-size: 1.25rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .metric-card {
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .metric-card:nth-child(1) { animation-delay: 0.1s; }
+        .metric-card:nth-child(2) { animation-delay: 0.2s; }
+        .metric-card:nth-child(3) { animation-delay: 0.3s; }
+        .metric-card:nth-child(4) { animation-delay: 0.4s; }
+        .metric-card:nth-child(5) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Header -->
+    <header>
+        <h1>💪 Fitness Tracker Dashboard</h1>
+        <div class="header-controls">
+            <button class="menu-toggle" id="menuToggle" aria-label="Toggle sidebar menu">
+                ☰ Menu
+            </button>
+            <button class="toggle-btn" id="themeToggle" aria-label="Toggle dark/light mode">
+                🌙 Dark Mode
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+            <nav>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Menu</div>
+                    <ul>
+                        <li><a href="#" class="nav-link active" data-page="dashboard">📊 Dashboard</a></li>
+                        <li><a href="#" class="nav-link" data-page="weekly-report">📈 Weekly Report</a></li>
+                        <li><a href="#" class="nav-link" data-page="profile">👤 Profile</a></li>
+                        <li><a href="#" class="nav-link" data-page="settings">⚙️ Settings</a></li>
+                    </ul>
+                </div>
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">Quick Stats</div>
+                    <ul>
+                        <li><a href="#" class="nav-link" data-page="goals">🎯 My Goals</a></li>
+                        <li><a href="#" class="nav-link" data-page="history">📅 History</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <h2 class="page-title">Welcome to Your Fitness Dashboard</h2>
+
+            <!-- Data Input Section -->
+            <section class="input-section" id="inputSection">
+                <h2>📝 Log Your Activity</h2>
+                <div class="input-grid">
+                    <div class="form-group">
+                        <label for="stepsInput">Steps</label>
+                        <input type="number" id="stepsInput" placeholder="0" min="0" max="100000">
+                    </div>
+                    <div class="form-group">
+                        <label for="caloriesInput">Calories Burned</label>
+                        <input type="number" id="caloriesInput" placeholder="0" min="0" max="10000">
+                    </div>
+                    <div class="form-group">
+                        <label for="heartRateInput">Heart Rate (BPM)</label>
+                        <input type="number" id="heartRateInput" placeholder="0" min="0" max="220">
+                    </div>
+                    <div class="form-group">
+                        <label for="distanceInput">Distance (km)</label>
+                        <input type="number" id="distanceInput" placeholder="0" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="durationInput">Duration (min)</label>
+                        <input type="number" id="durationInput" placeholder="0" min="0" max="480">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn btn-primary" id="logActivityBtn">✅ Log Activity</button>
+                    <button class="btn btn-secondary" id="generateDemoBtn">📊 Generate Sample Data</button>
+                    <button class="btn btn-danger" id="clearDataBtn">🗑️ Clear All Data</button>
+                </div>
+            </section>
+
+            <!-- Metrics Grid -->
+            <section class="metrics-grid" id="metricsGrid">
+                <!-- Dynamically populated by JavaScript -->
+            </section>
+
+            <!-- Charts Section -->
+            <section class="charts-section">
+                <h2>📈 Weekly Analytics</h2>
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <div class="chart-title">Weekly Steps & Distance</div>
+                        <div class="chart-wrapper">
+                            <canvas id="weeklyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Calories Burned</div>
+                        <div class="chart-wrapper">
+                            <canvas id="caloriesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Heart Rate Trends</div>
+                        <div class="chart-wrapper">
+                            <canvas id="heartRateChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart-title">Activity Duration</div>
+                        <div class="chart-wrapper">
+                            <canvas id="durationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // ============================================
+        // Fitness Tracker Dashboard JavaScript
+        // ============================================
+        // Current Date: June 29, 2026
+        // Purpose: Interactive fitness tracking with localStorage persistence
+
+        // ============================================
+        // DATA MANAGEMENT
+        // ============================================
+
+        class FitnessTracker {
+            constructor() {
+                this.storageKey = 'fitnessTrackerData';
+                this.themeKey = 'fitnessTrackerTheme';
+                this.loadData();
+                this.initializeCharts();
+            }
+
+            // Initialize with default data if none exists
+            initializeData() {
+                const defaultWeek = this.generateLastSevenDays();
+                return {
+                    weeklyData: defaultWeek,
+                    goals: {
+                        steps: 10000,
+                        calories: 2000,
+                        heartRate: 100,
+                        distance: 5,
+                        duration: 60
+                    },
+                    lastUpdated: new Date().toISOString()
+                };
+            }
+
+            // Generate last 7 days with sample data
+            generateLastSevenDays() {
+                const days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const date = new Date();
+                    date.setDate(date.getDate() - i);
+                    days.push({
+                        date: date.toISOString().split('T')[0],
+                        steps: Math.floor(Math.random() * 15000),
+                        calories: Math.floor(Math.random() * 2500),
+                        heartRate: Math.floor(Math.random() * 80) + 60,
+                        distance: parseFloat((Math.random() * 10).toFixed(1)),
+                        duration: Math.floor(Math.random() * 120)
+                    });
+                }
+                return days;
+            }
+
+            // Load data from localStorage
+            loadData() {
+                const stored = localStorage.getItem(this.storageKey);
+                this.data = stored ? JSON.parse(stored) : this.initializeData();
+            }
+
+            // Save data to localStorage
+            saveData() {
+                this.data.lastUpdated = new Date().toISOString();
+                localStorage.setItem(this.storageKey, JSON.stringify(this.data));
+            }
+
+            // Get today's data (or create if doesn't exist)
+            getTodayData() {
+                const today = new Date().toISOString().split('T')[0];
+                let todayData = this.data.weeklyData.find(d => d.date === today);
+                
+                if (!todayData) {
+                    todayData = {
+                        date: today,
+                        steps: 0,
+                        calories: 0,
+                        heartRate: 0,
+                        distance: 0,
+                        duration: 0
+                    };
+                    this.data.weeklyData.push(todayData);
+                    // Keep only last 7 days
+                    if (this.data.weeklyData.length > 7) {
+                        this.data.weeklyData.shift();
+                    }
+                }
+                return todayData;
+            }
+
+            // Update today's metrics
+            updateMetrics(metrics) {
+                const today = this.getTodayData();
+                Object.assign(today, metrics);
+                this.saveData();
+            }
+
+            // Get weekly summary
+            getWeeklySummary() {
+                return {
+                    totalSteps: this.data.weeklyData.reduce((sum, d) => sum + d.steps, 0),
+                    avgCalories: Math.round(this.data.weeklyData.reduce((sum, d) => sum + d.calories, 0) / 7),
+                    avgHeartRate: Math.round(this.data.weeklyData.reduce((sum, d) => sum + d.heartRate, 0) / 7),
+                    totalDistance: parseFloat((this.data.weeklyData.reduce((sum, d) => sum + d.distance, 0)).toFixed(1)),
+                    totalDuration: this.data.weeklyData.reduce((sum, d) => sum + d.duration, 0)
+                };
+            }
+
+            // Generate demo data
+            generateDemoData() {
+                this.data.weeklyData = this.generateLastSevenDays();
+                this.saveData();
+            }
+
+            // Clear all data
+            clearData() {
+                if (confirm('Are you sure you want to clear all fitness data? This cannot be undone.')) {
+                    this.data = this.initializeData();
+                    this.saveData();
+                    return true;
+                }
+                return false;
+            }
+
+            initializeCharts() {
+                // Placeholder for chart initialization
+            }
+        }
+
+        // Initialize tracker
+        const tracker = new FitnessTracker();
+
+        // ============================================
+        // UI RENDERING
+        // ============================================
+
+        function renderMetrics() {
+            const today = tracker.getTodayData();
+            const goals = tracker.data.goals;
+            const metricsGrid = document.getElementById('metricsGrid');
+            
+            const metrics = [
+                {
+                    id: 'steps',
+                    title: 'Steps',
+                    icon: '👟',
+                    value: today.steps,
+                    unit: 'steps',
+                    goal: goals.steps,
+                    class: 'steps'
+                },
+                {
+                    id: 'calories',
+                    title: 'Calories Burned',
+                    icon: '🔥',
+                    value: today.calories,
+                    unit: 'kcal',
+                    goal: goals.calories,
+                    class: 'calories'
+                },
+                {
+                    id: 'heart-rate',
+                    title: 'Heart Rate',
+                    icon: '❤️',
+                    value: today.heartRate,
+                    unit: 'BPM',
+                    goal: goals.heartRate,
+                    class: 'heart-rate'
+                },
+                {
+                    id: 'distance',
+                    title: 'Distance Traveled',
+                    icon: '🛤️',
+                    value: today.distance,
+                    unit: 'km',
+                    goal: goals.distance,
+                    class: 'distance'
+                },
+                {
+                    id: 'duration',
+                    title: 'Activity Duration',
+                    icon: '⏱️',
+                    value: today.duration,
+                    unit: 'minutes',
+                    goal: goals.duration,
+                    class: 'duration'
+                }
+            ];
+
+            metricsGrid.innerHTML = metrics.map(metric => {
+                const percentage = Math.min((metric.value / metric.goal) * 100, 100);
+                return `
+                    <div class="metric-card ${metric.class}">
+                        <div class="metric-header">
+                            <span class="metric-title">${metric.title}</span>
+                            <span class="metric-icon">${metric.icon}</span>
+                        </div>
+                        <div class="metric-value">${metric.value}</div>
+                        <div class="metric-unit">${metric.unit}</div>
+                        <div class="metric-goal">Goal: ${metric.goal} ${metric.unit}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // CHART MANAGEMENT
+        // ============================================
+
+        const chartInstances = {};
+
+        function initCharts() {
+            const weeklyData = tracker.data.weeklyData;
+            const dates = weeklyData.map(d => new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }));
+            
+            // Chart.js color scheme
+            const colors = {
+                primary: '#4CAF50',
+                secondary: '#2196F3',
+                accent1: '#FF9800',
+                accent2: '#F44336',
+                accent3: '#E91E63',
+                accent4: '#00BCD4',
+                accent5: '#9C27B0'
+            };
+
+            // Weekly Steps & Distance Chart
+            const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+            chartInstances.weekly = new Chart(weeklyCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [
+                        {
+                            label: 'Steps',
+                            data: weeklyData.map(d => d.steps),
+                            borderColor: colors.accent1,
+                            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Distance (km)',
+                            data: weeklyData.map(d => d.distance * 1000), // Convert to steps equivalent
+                            borderColor: colors.accent4,
+                            backgroundColor: 'rgba(0, 188, 212, 0.1)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    plugins: { legend: { display: true, position: 'top' } }
+                }
+            });
+
+            // Calories Chart
+            const caloriesCtx = document.getElementById('caloriesChart').getContext('2d');
+            chartInstances.calories = new Chart(caloriesCtx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Calories Burned',
+                        data: weeklyData.map(d => d.calories),
+                        backgroundColor: colors.accent2,
+                        borderColor: colors.accent2,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Heart Rate Chart
+            const heartRateCtx = document.getElementById('heartRateChart').getContext('2d');
+            chartInstances.heartRate = new Chart(heartRateCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Heart Rate (BPM)',
+                        data: weeklyData.map(d => d.heartRate),
+                        borderColor: colors.accent3,
+                        backgroundColor: 'rgba(233, 30, 99, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, max: 220 } },
+                    plugins: { legend: { display: true } }
+                }
+            });
+
+            // Duration Chart
+            const durationCtx = document.getElementById('durationChart').getContext('2d');
+            chartInstances.duration = new Chart(durationCtx, {
+                type: 'bar',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Activity Duration (min)',
+                        data: weeklyData.map(d => d.duration),
+                        backgroundColor: colors.accent5,
+                        borderColor: colors.accent5,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: true } }
+                }
+            });
+        }
+
+        function updateCharts() {
+            const weeklyData = tracker.data.weeklyData;
+            const dates = weeklyData.map(d => new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }));
+
+            chartInstances.weekly.data.labels = dates;
+            chartInstances.weekly.data.datasets[0].data = weeklyData.map(d => d.steps);
+            chartInstances.weekly.data.datasets[1].data = weeklyData.map(d => d.distance * 1000);
+            chartInstances.weekly.update();
+
+            chartInstances.calories.data.labels = dates;
+            chartInstances.calories.data.datasets[0].data = weeklyData.map(d => d.calories);
+            chartInstances.calories.update();
+
+            chartInstances.heartRate.data.labels = dates;
+            chartInstances.heartRate.data.datasets[0].data = weeklyData.map(d => d.heartRate);
+            chartInstances.heartRate.update();
+
+            chartInstances.duration.data.labels = dates;
+            chartInstances.duration.data.datasets[0].data = weeklyData.map(d => d.duration);
+            chartInstances.duration.update();
+        }
+
+        // ============================================
+        // THEME MANAGEMENT
+        // ============================================
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('fitnessTrackerTheme') || 'light';
+            setTheme(savedTheme);
+        }
+
+        function setTheme(theme) {
+            const body = document.body;
+            body.setAttribute('data-theme', theme);
+            localStorage.setItem('fitnessTrackerTheme', theme);
+            
+            const themeBtn = document.getElementById('themeToggle');
+            if (theme === 'dark') {
+                themeBtn.textContent = '☀️ Light Mode';
+            } else {
+                themeBtn.textContent = '🌙 Dark Mode';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+
+        function setupEventListeners() {
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+
+            // Menu toggle for mobile
+            const menuToggle = document.getElementById('menuToggle');
+            const sidebar = document.getElementById('sidebar');
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+
+            // Close sidebar when nav link is clicked
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    sidebar.classList.remove('active');
+                });
+            });
+
+            // Log activity button
+            document.getElementById('logActivityBtn').addEventListener('click', () => {
+                const metrics = {
+                    steps: parseInt(document.getElementById('stepsInput').value) || 0,
+                    calories: parseInt(document.getElementById('caloriesInput').value) || 0,
+                    heartRate: parseInt(document.getElementById('heartRateInput').value) || 0,
+                    distance: parseFloat(document.getElementById('distanceInput').value) || 0,
+                    duration: parseInt(document.getElementById('durationInput').value) || 0
+                };
+
+                tracker.updateMetrics(metrics);
+                clearInputs();
+                renderMetrics();
+                updateCharts();
+                alert('✅ Activity logged successfully!');
+            });
+
+            // Generate demo data button
+            document.getElementById('generateDemoBtn').addEventListener('click', () => {
+                tracker.generateDemoData();
+                renderMetrics();
+                updateCharts();
+                alert('📊 Sample data generated for the week!');
+            });
+
+            // Clear data button
+            document.getElementById('clearDataBtn').addEventListener('click', () => {
+                if (tracker.clearData()) {
+                    renderMetrics();
+                    updateCharts();
+                    clearInputs();
+                    alert('✨ All data cleared!');
+                }
+            });
+
+            // Allow Enter key to submit activity
+            document.querySelectorAll('.form-group input').forEach(input => {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        document.getElementById('logActivityBtn').click();
+                    }
+                });
+            });
+        }
+
+        function clearInputs() {
+            document.getElementById('stepsInput').value = '';
+            document.getElementById('caloriesInput').value = '';
+            document.getElementById('heartRateInput').value = '';
+            document.getElementById('distanceInput').value = '';
+            document.getElementById('durationInput').value = '';
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            renderMetrics();
+            initCharts();
+            setupEventListeners();
+        });
+    </script>
+</body>
+</html>
