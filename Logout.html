@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A simple blog layout with header, sidebar, and main content area">
+    <meta name="author" content="Code Studio">
+    <title>Simple Blog Layout</title>
+    <link rel="stylesheet" href="blog_layout.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="header-container">
+            <h1 class="blog-title">My Awesome Blog</h1>
+            <p class="blog-tagline">Sharing thoughts and ideas with the world</p>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+                <li><a href="#archive">Archive</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Sidebar Section -->
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>About Me</h3>
+                <p>Welcome to my blog! I write about technology, design, and everything in between.</p>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Categories</h3>
+                <ul class="category-list">
+                    <li><a href="#tech">Technology</a></li>
+                    <li><a href="#design">Design</a></li>
+                    <li><a href="#lifestyle">Lifestyle</a></li>
+                    <li><a href="#travel">Travel</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Recent Posts</h3>
+                <ul class="recent-posts">
+                    <li><a href="#post1">Getting Started with Web Development</a></li>
+                    <li><a href="#post2">CSS Grid vs Flexbox</a></li>
+                    <li><a href="#post3">10 Tips for Better Design</a></li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-section">
+                <h3>Newsletter</h3>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="Your email address" required>
+                    <button type="submit">Subscribe</button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <article class="blog-post">
+                <h2 class="post-title">Understanding HTML and CSS Layouts</h2>
+                <div class="post-meta">
+                    <span class="post-date">April 30, 2026</span>
+                    <span class="post-author">By John Doe</span>
+                </div>
+                <p class="post-excerpt">
+                    Creating effective layouts is fundamental to web development. In this post, we'll explore 
+                    different techniques for building responsive and accessible blog layouts.
+                </p>
+                <p>
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt 
+                    ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco 
+                    laboris nisi ut aliquip ex ea commodo consequat.
+                </p>
+                <a href="#read-more" class="read-more">Read More →</a>
+            </article>
+
+            <article class="blog-post">
+                <h2 class="post-title">The Power of CSS Grid</h2>
+                <div class="post-meta">
+                    <span class="post-date">April 28, 2026</span>
+                    <span class="post-author">By Jane Smith</span>
+                </div>
+                <p class="post-excerpt">
+                    CSS Grid revolutionized the way we create layouts on the web. Let's dive into how you can 
+                    use it to create stunning, flexible designs.
+                </p>
+                <p>
+                    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat 
+                    nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia 
+                    deserunt mollit anim id est laborum.
+                </p>
+                <a href="#read-more" class="read-more">Read More →</a>
+            </article>
+
+            <article class="blog-post">
+                <h2 class="post-title">Responsive Design Best Practices</h2>
+                <div class="post-meta">
+                    <span class="post-date">April 25, 2026</span>
+                    <span class="post-author">By Alex Johnson</span>
+                </div>
+                <p class="post-excerpt">
+                    With mobile devices dominating web traffic, responsive design is no longer optional. 
+                    Here are some best practices to ensure your site looks great on all devices.
+                </p>
+                <p>
+                    Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque 
+                    laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi 
+                    architecto beatae vitae dicta sunt explicabo.
+                </p>
+                <a href="#read-more" class="read-more">Read More →</a>
+            </article>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 My Awesome Blog. All rights reserved.</p>
+        <p>Current Date: April 30, 2026</p>
+    </footer>
+</body>
+</html>
