@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Hotel Management</title>
+<style>body{font-family:system-ui,sans-serif;margin:0;background:#f5f5f0}header{background:#7c2d12;color:#fff;padding:1rem 2rem}main{padding:1rem 2rem;display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(360px,1fr))}section{background:#fff;padding:1rem;border-radius:8px}input,select,button{padding:.4rem;margin:.2rem 0}button{background:#7c2d12;color:#fff;border:0;border-radius:4px}td,th{text-align:left;padding:.3rem;border-bottom:1px solid #eee}#live{font-size:.8rem}</style></head><body>
+<header><h1>Hotel Management</h1><span id="live" role="status">connecting…</span></header><main>
+<section><h2>Rooms</h2><table id="rooms"></table></section>
+<section><h2>Book room</h2><form id="rf"><input name="guest" placeholder="Guest" required aria-label="Guest"> <select name="roomId" id="rs" aria-label="Room"></select> <input name="checkIn" type="date" required aria-label="Check-in"> <input name="checkOut" type="date" required aria-label="Check-out"> <button>Reserve</button></form><p id="msg" role="alert"></p>
+<h2>Reservations</h2><table id="res"></table></section>
+<section><h2>Staff &amp; tasks</h2><form id="sf"><input name="name" placeholder="Staff name" required aria-label="Staff name"> <input name="role" placeholder="Role" aria-label="Role"> <button>Add staff</button></form>
+<form id="tf"><input name="description" placeholder="Task" required aria-label="Task"> <select name="staffId" id="ss" aria-label="Staff"></select> <select name="roomId" id="ts" aria-label="Room"></select> <button>Assign</button></form><table id="tasks"></table></section></main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S={rooms:[],reservations:[],staff:[],tasks:[]};
+const up=(a,o)=>{const i=a.findIndex(x=>x.id===o.id);i<0?a.push(o):a[i]=o};
+function draw(){const ro=S.rooms.map(r=>`<option value="${r.id}">${esc(r.number)}</option>`).join('');
+$('#rooms').innerHTML='<tr><th>No.</th><th>Type</th><th>Rate</th><th>Status</th></tr>'+S.rooms.map(r=>`<tr><td>${esc(r.number)}</td><td>${esc(r.type)}</td><td>$${r.rate}</td><td>${esc(r.status)}</td></tr>`).join('');
+$('#rs').innerHTML=ro;$('#ts').innerHTML='<option value="">No room</option>'+ro;
+$('#ss').innerHTML=S.staff.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('');
+$('#res').innerHTML=S.reservations.map(r=>`<tr><td>${esc(r.guest)}</td><td>${esc(r.checkIn)}→${esc(r.checkOut)}</td><td>${esc(r.status)}</td><td>${r.status==='reserved'?`<button data-a="checkin" data-id="${r.id}">Check in</button> <button data-a="cancel" data-id="${r.id}">Cancel</button>`:r.status==='checked-in'?`<button data-a="checkout" data-id="${r.id}">Check out</button>`:r.finalBill?'Total $'+r.finalBill.total:''}</td></tr>`).join('');
+$('#tasks').innerHTML=S.tasks.map(t=>`<tr><td>${esc(t.description)}</td><td>${esc((S.staff.find(s=>s.id===t.staffId)||{}).name||'')}</td><td>${t.status==='open'?`<button data-t="${t.id}">Done</button>`:'done'}</td></tr>`).join('')}
+const ws=new WebSocket((location.protocol==='https:'?'wss://':'ws://')+location.host+'/ws');
+ws.onopen=()=>$('#live').textContent='live';ws.onclose=()=>$('#live').textContent='disconnected';
+ws.onmessage=e=>{const{type,data}=JSON.parse(e.data);if(type==='snapshot')S=data;else up({room:S.rooms,reservation:S.reservations,staff:S.staff,task:S.tasks}[type],data);draw()};
+async function post(u,b){const r=await fetch(u,{method:'POST',body:JSON.stringify(b||{})});$('#msg').textContent=r.ok?'':(await r.json()).error;return r.ok}
+const f=(s,u)=>$(s).addEventListener('submit',async e=>{e.preventDefault();if(await post(u,Object.fromEntries(new FormData(e.target))))e.target.reset()});
+f('#rf','/api/reservations');f('#sf','/api/staff');f('#tf','/api/tasks');
+$('#res').onclick=e=>e.target.dataset.a&&post(`/api/reservations/${e.target.dataset.id}/${e.target.dataset.a}`);
+$('#tasks').onclick=e=>e.target.dataset.t&&post(`/api/tasks/${e.target.dataset.t}/complete`);
+</script></body></html>

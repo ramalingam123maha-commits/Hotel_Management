@@ -1,0 +1,20 @@
+const assert = require('assert'), WebSocket = require('ws'), { server, reset } = require('./server');
+server.listen(0, async () => {
+  const port = server.address().port, base = 'http://localhost:' + port;
+  const call = async (m, u, b) => { const r = await fetch(base + u, { method: m, body: b && JSON.stringify(b) }); return [r.status, await r.json()]; };
+  reset();
+  const ws = new WebSocket(`ws://localhost:${port}/ws`), msgs = [];
+  ws.on('message', d => msgs.push(JSON.parse(d)));
+  await new Promise(r => ws.on('open', r)); await new Promise(r => setTimeout(r, 50));
+  const [, st] = await call('GET', '/api/state'); const room = st.rooms[0];
+  const [c, r] = await call('POST', '/api/reservations', { guest: 'Bob', roomId: room.id, checkIn: '2025-01-01', checkOut: '2025-01-03' });
+  assert.equal(c, 201);
+  assert.equal((await call('POST', '/api/reservations', { guest: 'X', roomId: room.id, checkIn: '2025-01-02', checkOut: '2025-01-04' }))[0], 409);
+  await call('POST', `/api/reservations/${r.id}/checkin`);
+  await call('POST', `/api/reservations/${r.id}/charge`, { description: 'Spa', amount: 20 });
+  const [, out] = await call('POST', `/api/reservations/${r.id}/checkout`);
+  assert.equal(out.finalBill.total, 198);
+  await new Promise(r => setTimeout(r, 100));
+  assert(msgs.some(m => m.type === 'reservation') && msgs.some(m => m.type === 'room'));
+  console.log('all tests passed'); ws.close(); server.close();
+});
